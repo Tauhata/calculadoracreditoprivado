@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Carteira de Debêntures</title>
+<style>
+:root {
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f5f5f4;
+  --color-background-tertiary: #eeece8;
+  --color-text-primary: #1a1a18;
+  --color-text-secondary: #6b6b67;
+  --color-text-tertiary: #9c9c97;
+  --color-border-tertiary: rgba(0,0,0,0.12);
+  --color-border-secondary: rgba(0,0,0,0.22);
+  --color-border-primary: rgba(0,0,0,0.32);
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --font-sans: system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background-primary: #1e1e1c;
+    --color-background-secondary: #2a2a28;
+    --color-background-tertiary: #323230;
+    --color-text-primary: #f0ede8;
+    --color-text-secondary: #a8a8a3;
+    --color-text-tertiary: #6b6b67;
+    --color-border-tertiary: rgba(255,255,255,0.10);
+    --color-border-secondary: rgba(255,255,255,0.20);
+    --color-border-primary: rgba(255,255,255,0.30);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--color-background-tertiary);color:var(--color-text-primary);padding:2rem 1rem;min-height:100vh}
+.wrapper{max-width:900px;margin:0 auto}
+h1{font-size:20px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.subtitle{font-size:13px;color:var(--color-text-secondary);margin-bottom:1.5rem}
+.app{padding:0}
+.tabs{display:flex;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);overflow:hidden;margin-bottom:1.5rem}
+.tab{flex:1;padding:10px 8px;font-size:13px;font-weight:500;cursor:pointer;background:transparent;border:none;color:var(--color-text-secondary)}
+.tab.active{background:var(--color-background-secondary);color:var(--color-text-primary)}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:1rem}
+.sec-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px}
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.fchip{padding:5px 12px;font-size:12px;border:0.5px solid var(--color-border-secondary);border-radius:20px;cursor:pointer;background:transparent;color:var(--color-text-secondary)}
+.fchip.on{background:var(--color-background-secondary);color:var(--color-text-primary);border-color:var(--color-border-primary)}
+.deb-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-bottom:12px}
+.deb-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:9px 11px;cursor:pointer;position:relative;transition:border-color 0.12s}
+.deb-card:hover{border-color:var(--color-border-secondary)}
+.deb-card.sel{border:1.5px solid #534AB7}
+.deb-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px}
+.deb-ticker{font-size:10px;font-weight:500;background:#EEEDFE;color:#3C3489;padding:2px 6px;border-radius:3px}
+.chk{width:15px;height:15px;border-radius:50%;border:1.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;font-size:8px;color:transparent;flex-shrink:0}
+.chk.on{background:#534AB7;border-color:#534AB7;color:white}
+.deb-name{font-size:12px;font-weight:500;color:var(--color-text-primary);line-height:1.3;margin-bottom:2px}
+.deb-meta{font-size:10px;color:var(--color-text-secondary)}
+.deb-idx{display:inline-block;font-size:10px;font-weight:500;padding:1px 6px;border-radius:3px;margin:3px 0}
+.idx-cdi{background:#E6F1FB;color:#0C447C}
+.idx-ipca{background:#EAF3DE;color:#27500A}
+.idx-pre{background:#FAEEDA;color:#633806}
+.deb-rate{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.deb-months{font-size:10px;color:var(--color-text-secondary);margin-top:2px}
+.badge-ok{font-size:11px;background:#EAF3DE;color:#27500A;padding:3px 10px;border-radius:4px;display:inline-block}
+.badge-warn{font-size:11px;background:#FAEEDA;color:#633806;padding:3px 10px;border-radius:4px;display:inline-block}
+.badge-info{font-size:11px;background:#EEEDFE;color:#3C3489;padding:3px 10px;border-radius:4px;display:inline-block}
+.badge-danger{font-size:11px;background:#FCEBEB;color:#791F1F;padding:3px 10px;border-radius:4px;display:inline-block}
+input[type=text]{padding:8px 12px;font-size:14px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);width:190px}
+.btn-calc{padding:9px 22px;font-size:13px;font-weight:500;border:none;border-radius:var(--border-radius-md);cursor:pointer;background:#534AB7;color:white}
+.btn-calc:active{transform:scale(0.98)}
+.alloc-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.abtn{padding:5px 13px;font-size:12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;background:transparent;color:var(--color-text-secondary)}
+.abtn.active{background:var(--color-background-secondary);color:var(--color-text-primary)}
+.metric-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1rem}
+.met{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px}
+.met-lbl{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px}
+.met-val{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.met-sub{font-size:10px;color:var(--color-text-secondary);margin-top:2px}
+.q-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.q-box{border-radius:var(--border-radius-md);padding:10px;border:0.5px solid var(--color-border-tertiary)}
+.q-lbl{font-size:10px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px}
+.q-val{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.q-months{font-size:10px;color:var(--color-text-secondary);margin-top:2px}
+.q-box.has{background:#EEEDFE;border-color:#AFA9EC}
+.q-box.has .q-val{color:#3C3489}
+.cal12{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px;margin:10px 0}
+.cm{border-radius:5px;padding:6px 2px;text-align:center}
+.cm-name{font-size:9px;font-weight:500;color:var(--color-text-secondary);margin-bottom:2px}
+.cm-val{font-size:10px;font-weight:500}
+.cm-who{font-size:8px;color:var(--color-text-secondary);margin-top:1px;line-height:1.3}
+.cm.pay{background:#EEEDFE}.cm.pay .cm-val{color:#3C3489}
+.cm.nopay{background:var(--color-background-secondary)}.cm.nopay .cm-val{color:var(--color-text-tertiary)}
+.alloc-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.alloc-name{font-size:12px;color:var(--color-text-primary);min-width:120px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-bg{flex:1;height:4px;background:var(--color-border-tertiary);border-radius:2px}
+.bar-fill{height:4px;border-radius:2px;background:#534AB7}
+.alloc-pct{font-size:11px;color:var(--color-text-secondary);min-width:28px;text-align:right}
+.alloc-brl{font-size:12px;font-weight:500;color:var(--color-text-primary);min-width:90px;text-align:right}
+.ftable{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.ftable th{font-size:10px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.04em;padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);text-align:left}
+.ftable td{padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:middle}
+.ftable tr:last-child td{border-bottom:none}
+.mpill{display:inline-block;background:#EEEDFE;color:#3C3489;font-size:9px;font-weight:500;padding:2px 5px;border-radius:3px;margin:1px}
+.input-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.input-lbl{font-size:13px;color:var(--color-text-secondary);min-width:155px}
+</style>
+</head>
+<body>
+<div class="wrapper">
+<h1>Calculadora de Carteira de Debêntures</h1>
+<p class="subtitle">Monte uma carteira de renda com cupons semestrais distribuídos ao longo do ano</p>
+
+<div class="app">
+<div class="tabs">
+  <button class="tab active" id="tab-sim" onclick="setMode('sim')">Simular renda</button>
+  <button class="tab" id="tab-meta" onclick="setMode('meta')">Meta de renda mensal</button>
+</div>
+
+<div class="card">
+  <div class="sec-label">Debêntures disponíveis — selecione as que deseja combinar</div>
+  <div class="filter-row" id="filter-row"></div>
+  <div class="deb-grid" id="deb-grid"></div>
+  <div id="sel-badge" style="margin-top:4px"></div>
+</div>
+
+<div class="card">
+  <div class="sec-label" id="mode-title">Valor a investir</div>
+  <div class="input-row">
+    <span class="input-lbl" id="input-lbl">Total a investir (R$)</span>
+    <input type="text" id="main-val" value="200.000" oninput="fmtInput(this)">
+  </div>
+  <div style="margin-bottom:14px">
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:7px">Estratégia de alocação</div>
+    <div class="alloc-btns">
+      <button class="abtn active" onclick="setAlloc('igual',this)">Igualitária</button>
+      <button class="abtn" onclick="setAlloc('yield',this)">Maior yield primeiro</button>
+      <button class="abtn" onclick="setAlloc('manual',this)">Manual</button>
+    </div>
+  </div>
+  <div id="manual-sec" style="display:none;margin-bottom:14px"></div>
+  <button class="btn-calc" onclick="calcular()">Calcular carteira</button>
+</div>
+
+<div id="results" style="display:none">
+  <div class="metric-row">
+    <div class="met"><div class="met-lbl">Total investido</div><div class="met-val" id="m-invest">—</div></div>
+    <div class="met"><div class="met-lbl">Renda anual estimada</div><div class="met-val" id="m-anual">—</div><div class="met-sub" id="m-yield-sub"></div></div>
+    <div class="met"><div class="met-lbl">Média por mês com pagto.</div><div class="met-val" id="m-mensal">—</div></div>
+    <div class="met"><div class="met-lbl">Meses cobertos</div><div class="met-val" id="m-cobert">—</div><div class="met-sub">de 12 no ano</div></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-label">Pagamentos por trimestre</div>
+    <div class="q-row" id="q-row"></div>
+    <div id="cov-badge"></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-label">Calendário de pagamentos — 12 meses</div>
+    <div class="cal12" id="cal12"></div>
+    <div style="display:flex;gap:14px;margin-top:8px;font-size:11px;color:var(--color-text-secondary);align-items:center">
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#EEEDFE;border:0.5px solid #AFA9EC;display:inline-block"></span>Mês com cupom</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--color-background-secondary);display:inline-block"></span>Sem pagamento</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec-label">Alocação por título</div>
+    <div id="alloc-bars"></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-label">Fluxo detalhado por debênture</div>
+    <div style="overflow-x:auto">
+      <table class="ftable">
+        <thead><tr>
+          <th style="width:20%">Título</th>
+          <th style="width:13%">Setor</th>
+          <th style="width:10%">Indexador</th>
+          <th style="width:13%">Remuneração</th>
+          <th style="width:15%">Meses de pagto.</th>
+          <th style="width:14%">Cupom semestral</th>
+          <th style="width:15%">Valor alocado</th>
+        </tr></thead>
+        <tbody id="ftbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<p style="font-size:11px;color:var(--color-text-tertiary);margin-top:1.5rem;padding-top:1rem;border-top:0.5px solid var(--color-border-tertiary)">
+  Os títulos e taxas exibidos são ilustrativos. Verifique disponibilidade e condições atuais na sua corretora antes de investir. Valores estimados não consideram IR, IOF nem variação do indexador.
+</p>
+</div>
+
+<script>
+const MN=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const DEBS=[
+  {id:'PRIO13',name:'Prio (PetroRio)',setor:'Petróleo',venc:'2027',idx:'CDI',spread:1.9,yieldRef:14.8,cupons:[1,7]},
+  {id:'RAIL13',name:'Rumo Logística',setor:'Logística',venc:'2030',idx:'CDI',spread:2.1,yieldRef:15.0,cupons:[2,8]},
+  {id:'ENGI11',name:'Energisa',setor:'Energia elétrica',venc:'2029',idx:'IPCA',spread:7.2,yieldRef:7.2,cupons:[3,9]},
+  {id:'CCPR3',name:'Cyrela CPR',setor:'Imóveis',venc:'2027',idx:'CDI',spread:1.6,yieldRef:14.5,cupons:[4,10]},
+  {id:'TAEE11',name:'Taesa',setor:'Transmissão',venc:'2032',idx:'IPCA',spread:7.5,yieldRef:7.5,cupons:[5,11]},
+  {id:'VALE3D',name:'Vale S.A.',setor:'Mineração',venc:'2030',idx:'CDI',spread:2.3,yieldRef:15.2,cupons:[6,12]},
+  {id:'SBSP3D',name:'Sabesp',setor:'Saneamento',venc:'2031',idx:'IPCA',spread:6.9,yieldRef:6.9,cupons:[1,7]},
+  {id:'EQTL3D',name:'Equatorial',setor:'Energia elétrica',venc:'2033',idx:'IPCA',spread:7.1,yieldRef:7.1,cupons:[2,8]},
+  {id:'GGBR4D',name:'Gerdau',setor:'Siderurgia',venc:'2028',idx:'CDI',spread:1.5,yieldRef:14.4,cupons:[3,9]},
+  {id:'CSAN3D',name:'Cosan',setor:'Energia/Logística',venc:'2029',idx:'CDI',spread:2.5,yieldRef:15.4,cupons:[4,10]},
+  {id:'PETR4D',name:'Petrobras',setor:'Petróleo',venc:'2032',idx:'PRE',spread:0,yieldRef:13.5,cupons:[5,11]},
+  {id:'EGIE3D',name:'Engie Brasil',setor:'Energia elétrica',venc:'2031',idx:'IPCA',spread:7.4,yieldRef:7.4,cupons:[6,12]},
+  {id:'BBAS3D',name:'Banco do Brasil',setor:'Financeiro',venc:'2028',idx:'CDI',spread:1.2,yieldRef:14.1,cupons:[1,7]},
+  {id:'CMIG4D',name:'Cemig',setor:'Energia elétrica',venc:'2030',idx:'IPCA',spread:8.0,yieldRef:8.0,cupons:[3,9]},
+  {id:'MULT3D',name:'Multiplan',setor:'Imóveis',venc:'2029',idx:'CDI',spread:1.8,yieldRef:14.7,cupons:[4,10]},
+  {id:'LREN3D',name:'Lojas Renner',setor:'Varejo',venc:'2027',idx:'CDI',spread:2.8,yieldRef:15.7,cupons:[2,8]},
+  {id:'BRFS3D',name:'BRF S.A.',setor:'Alimentos',venc:'2031',idx:'CDI',spread:2.2,yieldRef:15.1,cupons:[6,12]},
+  {id:'RAIZ4D',name:'Raízen',setor:'Energia/Agro',venc:'2030',idx:'IPCA',spread:8.2,yieldRef:8.2,cupons:[5,11]},
+  {id:'WEGE3D',name:'WEG S.A.',setor:'Industrial',venc:'2032',idx:'CDI',spread:1.4,yieldRef:14.3,cupons:[2,8]},
+  {id:'USIM5D',name:'Usiminas',setor:'Siderurgia',venc:'2028',idx:'PRE',spread:0,yieldRef:14.2,cupons:[1,7]},
+  {id:'CPFE3D',name:'CPFL Energia',setor:'Energia elétrica',venc:'2033',idx:'IPCA',spread:7.0,yieldRef:7.0,cupons:[3,9]},
+  {id:'KLBN4D',name:'Klabin',setor:'Papel/Celulose',venc:'2031',idx:'CDI',spread:2.0,yieldRef:14.9,cupons:[6,12]},
+  {id:'VIVT3D',name:'Telefônica Vivo',setor:'Telecom',venc:'2029',idx:'CDI',spread:1.7,yieldRef:14.6,cupons:[4,10]},
+  {id:'SUZB3D',name:'Suzano',setor:'Papel/Celulose',venc:'2032',idx:'CDI',spread:1.6,yieldRef:14.5,cupons:[5,11]},
+];
+
+const SETORES=[...new Set(DEBS.map(d=>d.setor))].sort();
+let sel=new Set(['PRIO13','ENGI11','TAEE11','VALE3D','GGBR4D','EGIE3D']);
+let allocMode='igual';
+let manualPcts={};
+let filterSetor='Todos';
+let filterIdx='Todos';
+window._mode='sim';
+
+function renderFilters(){
+  const fr=document.getElementById('filter-row');
+  const setores=['Todos',...SETORES];
+  const idxs=['Todos','CDI','IPCA','PRE'];
+  fr.innerHTML=
+    setores.map(s=>`<button class="fchip ${filterSetor===s?'on':''}" onclick="setFilter('setor','${s}')">${s}</button>`).join('')+
+    '<span style="width:1px;background:var(--color-border-tertiary);margin:0 4px;align-self:stretch;display:inline-block"></span>'+
+    idxs.map(x=>`<button class="fchip ${filterIdx===x?'on':''}" onclick="setFilter('idx','${x}')">${x}</button>`).join('');
+}
+
+function setFilter(type,val){
+  if(type==='setor') filterSetor=val;
+  else filterIdx=val;
+  renderFilters();
+  renderDebs();
+}
+
+function renderDebs(){
+  const visible=DEBS.filter(d=>(filterSetor==='Todos'||d.setor===filterSetor)&&(filterIdx==='Todos'||d.idx===filterIdx));
+  document.getElementById('deb-grid').innerHTML=visible.map(d=>{
+    const s=sel.has(d.id);
+    const ms=d.cupons.map(c=>MN[c-1]).join(' e ');
+    const idxCls=d.idx==='CDI'?'idx-cdi':d.idx==='IPCA'?'idx-ipca':'idx-pre';
+    const rateLabel=d.idx==='CDI'?`CDI + ${d.spread}% a.a.`:d.idx==='IPCA'?`IPCA + ${d.spread}% a.a.`:`${d.yieldRef}% a.a.`;
+    return `<div class="deb-card ${s?'sel':''}" onclick="toggleDeb('${d.id}')">
+      <div class="deb-top"><span class="deb-ticker">${d.id}</span><span class="chk ${s?'on':''}">&#10003;</span></div>
+      <div class="deb-name">${d.name}</div>
+      <div class="deb-meta">Venc. ${d.venc}</div>
+      <span class="deb-idx ${idxCls}">${d.idx}</span>
+      <div class="deb-rate">${rateLabel}</div>
+      <div class="deb-months">Cupons: ${ms}</div>
+    </div>`;
+  }).join('');
+  updateBadge();
+  if(allocMode==='manual') renderManual();
+}
+
+function updateBadge(){
+  const months=new Set();
+  sel.forEach(id=>{const d=DEBS.find(x=>x.id===id);if(d)d.cupons.forEach(m=>months.add(m));});
+  const sorted=[...months].sort((a,b)=>a-b);
+  const el=document.getElementById('sel-badge');
+  if(!sel.size){el.innerHTML='<span class="badge-warn">Selecione ao menos 1 debênture</span>';return;}
+  const n=sorted.length;
+  const cover=sorted.map(m=>MN[m-1]).join(', ');
+  const cls=n>=6?'badge-ok':n>=3?'badge-info':'badge-warn';
+  const msg=n>=6?`Cobertura mensal: ${n} meses cobertos (${cover})`:n>=3?`Cobertura parcial: ${n} meses (${cover}) — adicione mais para cobertura mensal`:`Apenas ${n} meses cobertos (${cover})`;
+  el.innerHTML=`<span class="${cls}">${msg}</span> <span style="font-size:11px;color:var(--color-text-secondary);margin-left:8px">${sel.size} título${sel.size>1?'s':''} selecionado${sel.size>1?'s':''}</span>`;
+}
+
+function toggleDeb(id){
+  if(sel.has(id)){if(sel.size>1)sel.delete(id);}
+  else sel.add(id);
+  renderDebs();
+}
+
+function setMode(m){
+  window._mode=m;
+  document.getElementById('tab-sim').classList.toggle('active',m==='sim');
+  document.getElementById('tab-meta').classList.toggle('active',m==='meta');
+  document.getElementById('mode-title').textContent=m==='sim'?'Valor a investir':'Meta de renda mensal';
+  document.getElementById('input-lbl').textContent=m==='sim'?'Total a investir (R$)':'Renda mensal desejada (R$)';
+  document.getElementById('main-val').value=m==='sim'?'200.000':'3.000';
+  document.getElementById('results').style.display='none';
+}
+
+function setAlloc(mode,btn){
+  allocMode=mode;
+  document.querySelectorAll('.abtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('manual-sec').style.display=mode==='manual'?'block':'none';
+  if(mode==='manual') renderManual();
+}
+
+function renderManual(){
+  const selArr=[...sel].map(id=>DEBS.find(d=>d.id===id)).filter(Boolean);
+  const eq=(100/selArr.length).toFixed(1);
+  document.getElementById('manual-sec').innerHTML=
+    '<div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">Percentual por título (deve somar 100%)</div>'+
+    selArr.map(d=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="font-size:12px;min-width:140px;color:var(--color-text-primary)">${d.name}</span>
+      <input type="number" min="0" max="100" step="1" value="${manualPcts[d.id]||eq}" id="mp_${d.id}" style="width:65px;padding:5px 8px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)" onchange="manualPcts['${d.id}']=+this.value">
+      <span style="font-size:12px;color:var(--color-text-secondary)">%</span>
+    </div>`).join('');
+}
+
+function fmtInput(el){
+  let raw=el.value.replace(/\D/g,'');
+  if(!raw){el.value='';return;}
+  el.value=parseInt(raw,10).toLocaleString('pt-BR');
+}
+function parseV(s){return parseFloat(s.replace(/\./g,'').replace(',','.'))||0;}
+function brl(v){return 'R$\u00a0'+Math.round(v).toLocaleString('pt-BR');}
+function brl2(v){return 'R$\u00a0'+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function semRate(d){return Math.pow(1+d.yieldRef/100,0.5)-1;}
+
+function calcular(){
+  const selArr=[...sel].map(id=>DEBS.find(d=>d.id===id)).filter(Boolean);
+  if(!selArr.length) return;
+  const rawVal=parseV(document.getElementById('main-val').value);
+  if(!rawVal||rawVal<=0) return;
+
+  let pcts=[];
+  if(allocMode==='igual'){
+    pcts=selArr.map(()=>1/selArr.length);
+  } else if(allocMode==='yield'){
+    const sumY=selArr.reduce((s,d)=>s+d.yieldRef,0);
+    pcts=selArr.map(d=>d.yieldRef/sumY);
+  } else {
+    const raw=selArr.map(d=>{const el=document.getElementById('mp_'+d.id);return el?+el.value:100/selArr.length;});
+    const sum=raw.reduce((a,b)=>a+b,0)||1;
+    pcts=raw.map(v=>v/sum);
+  }
+
+  let totalInvest;
+  if(window._mode==='sim'){
+    totalInvest=rawVal;
+  } else {
+    const avgRate=selArr.reduce((s,d,i)=>s+semRate(d)*pcts[i],0);
+    const payMonths=new Set();
+    selArr.forEach(d=>d.cupons.forEach(m=>payMonths.add(m)));
+    const nPay=payMonths.size||1;
+    totalInvest=(rawVal*12)/(avgRate*2*nPay);
+  }
+
+  const allocs=selArr.map((d,i)=>({...d,pct:pcts[i],alocado:totalInvest*pcts[i],cupomSem:totalInvest*pcts[i]*semRate(d)}));
+
+  const mp={};
+  for(let m=1;m<=12;m++) mp[m]=0;
+  allocs.forEach(a=>a.cupons.forEach(m=>{mp[m]=(mp[m]||0)+a.cupomSem;}));
+
+  const totalAnual=Object.values(mp).reduce((s,v)=>s+v,0);
+  const payList=Object.entries(mp).filter(([,v])=>v>0);
+  const avgMensal=payList.length?payList.reduce((s,[,v])=>s+v,0)/payList.length:0;
+  const nCov=payList.length;
+
+  document.getElementById('m-invest').textContent=brl(totalInvest);
+  document.getElementById('m-anual').textContent=brl(totalAnual);
+  document.getElementById('m-yield-sub').textContent=`yield médio ~${(totalAnual/totalInvest*100).toFixed(1)}% a.a.`;
+  document.getElementById('m-mensal').textContent=brl(avgMensal);
+  document.getElementById('m-cobert').textContent=nCov;
+
+  const trims=[[1,2,3],[4,5,6],[7,8,9],[10,11,12]];
+  const ql=['1º trimestre','2º trimestre','3º trimestre','4º trimestre'];
+  document.getElementById('q-row').innerHTML=trims.map((ms,i)=>{
+    const val=ms.reduce((s,m)=>s+(mp[m]||0),0);
+    const months=ms.filter(m=>mp[m]>0).map(m=>MN[m-1]).join(', ');
+    return `<div class="q-box ${val>0?'has':''}">
+      <div class="q-lbl">${ql[i]}</div>
+      <div class="q-val">${val>0?brl(val):'—'}</div>
+      <div class="q-months">${months||'sem pagamento'}</div>
+    </div>`;
+  }).join('');
+
+  const trPay=trims.filter(ms=>ms.some(m=>mp[m]>0)).length;
+  document.getElementById('cov-badge').innerHTML=trPay===4?'<span class="badge-ok" style="margin-top:8px;display:inline-block">Cobertura total: renda em todos os trimestres</span>':
+    trPay>=2?`<span class="badge-warn" style="margin-top:8px;display:inline-block">${trPay} de 4 trimestres cobertos — adicione títulos para fechar os demais</span>`:
+    `<span class="badge-danger" style="margin-top:8px;display:inline-block">Apenas ${trPay} trimestre coberto</span>`;
+
+  const cal=document.getElementById('cal12');
+  cal.innerHTML='';
+  for(let m=1;m<=12;m++){
+    const val=mp[m];
+    const who=allocs.filter(a=>a.cupons.includes(m)).map(a=>a.id.replace(/\d/g,'')).join(' ');
+    cal.innerHTML+=`<div class="cm ${val>0?'pay':'nopay'}">
+      <div class="cm-name">${MN[m-1]}</div>
+      <div class="cm-val">${val>0?brl(val):'—'}</div>
+      <div class="cm-who">${who}</div>
+    </div>`;
+  }
+
+  document.getElementById('alloc-bars').innerHTML=allocs.map(a=>`<div class="alloc-row">
+    <span class="alloc-name">${a.name}</span>
+    <div class="bar-bg"><div class="bar-fill" style="width:${(a.pct*100).toFixed(0)}%"></div></div>
+    <span class="alloc-pct">${(a.pct*100).toFixed(0)}%</span>
+    <span class="alloc-brl">${brl(a.alocado)}</span>
+  </div>`).join('');
+
+  document.getElementById('ftbody').innerHTML=allocs.map(a=>{
+    const pills=a.cupons.map(m=>`<span class="mpill">${MN[m-1]}</span>`).join('');
+    const idxCls=a.idx==='CDI'?'idx-cdi':a.idx==='IPCA'?'idx-ipca':'idx-pre';
+    const rateLabel=a.idx==='CDI'?`CDI + ${a.spread}%`:a.idx==='IPCA'?`IPCA + ${a.spread}%`:`${a.yieldRef}% a.a.`;
+    return `<tr>
+      <td><span style="font-weight:500">${a.name}</span><br><span style="font-size:10px;color:var(--color-text-secondary)">Venc. ${a.venc}</span></td>
+      <td>${a.setor}</td>
+      <td><span class="deb-idx ${idxCls}" style="display:inline-block;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:500">${a.idx}</span></td>
+      <td>${rateLabel}</td>
+      <td>${pills}</td>
+      <td>${brl2(a.cupomSem)}</td>
+      <td>${brl(a.alocado)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('results').style.display='block';
+}
+
+renderFilters();
+renderDebs();
+</script>
+</body>
+</html>
